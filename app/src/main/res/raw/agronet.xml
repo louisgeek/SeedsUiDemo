@@ -1,0 +1,44 @@
+<agronet>
+    <table id="Sys_Menu">
+        <periods>
+            <period name="发芽期" value="1">
+                <id type="int" showname="主键" isshow="false"/>
+                <name type="text" showname="菜单名称" isshow="true"/>
+                <parentid type="radio" showname="父节点ID" isshow="true">
+                    <propertys>
+                        <property showname="单选1" value="1"/>
+                        <property showname="单选2" value="2"/>
+                    </propertys>
+                </parentid>
+                <code type="text" showname="标识码" isshow="true"/>
+                <linkaddress type="text" showname="链接地址" isshow="true"/>
+                <icon type="text" showname="图标" isshow="true"/>
+                <sort type="int" showname="排序" isshow="true"/>
+                <adddate type="date" showname="添加时间" isshow="false"/>
+            </period>
+            <period name="幼苗期" value="2">
+                <id type="int" showname="主键" isshow="false"/>
+                <name type="text" showname="菜单名称" isshow="true"/>
+                <parentid type="check" showname="父节点ID1" isshow="true">
+                    <propertys>
+                        <property showname="多选1" value="1"/>
+                        <property showname="多选2" value="2"/>
+                        <property showname="多选3" value="3"/>
+                    </propertys>
+                </parentid>
+                <code type="text" showname="标识码" isshow="true"/>
+                <linkaddress type="text" showname="链接地址" isshow="true"/>
+                <icon type="drop" showname="图标" isshow="true">
+                    <propertys>
+                        <property showname="图标1" value="1"/>
+                        <property showname="图标2" value="2"/>
+                        <property showname="图标3" value="3"/>
+                        <property showname="图标4" value="4"/>
+                    </propertys>
+                </icon>
+                <sort type="int" showname="排序" isshow="true"/>
+                <adddate type="date" showname="添加时间" isshow="false"/>
+            </period>
+        </periods>
+    </table>
+</agronet>
