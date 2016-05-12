@@ -1,20 +1,28 @@
 package com.louisgeek.seedsuidemo;
 
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.alibaba.fastjson.JSON;
+import com.oguzdev.circularfloatingactionmenu.library.FloatingActionButton;
+import com.oguzdev.circularfloatingactionmenu.library.FloatingActionMenu;
+import com.oguzdev.circularfloatingactionmenu.library.SubActionButton;
+import com.yyydjk.library.DropDownMenu;
 
 import org.json.JSONArray;
 import org.w3c.dom.Attr;
@@ -27,6 +35,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +59,16 @@ public class MainActivity extends AppCompatActivity {
 
     String JsonString = "";
     JSONArray jsonArray;
+    @Bind(R.id.id_dropDownMenu)
+    DropDownMenu idDropDownMenu;
+
+    private String tab_head_titles[] = {"城市", "年龄", "性别", "星座"};
+
+    private String citys[] = {"不限", "武汉", "北京", "上海", "成都", "广州", "深圳", "重庆", "天津", "西安", "南京", "杭州"};
+    private String ages[] = {"不限", "18岁以下", "18-22岁", "23-26岁", "27-35岁", "35岁以上"};
+    private String constellations[] = {"不限", "白羊座", "金牛座", "双子座", "巨蟹座", "狮子座", "处女座", "天秤座", "天蝎座", "射手座", "摩羯座", "水瓶座", "双鱼座"};
+
+    private List<View> dropDownViews = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,18 +76,78 @@ public class MainActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
 
-       // idBtn.setVisibility(View.GONE);
+        // idBtn.setVisibility(View.GONE);
         readXml();
 
 
         List<Period> periodList = agronet.getPeriods();
-         myBaseExpandableListAdapter = new MyBaseExpandableListAdapter(periodList, this);
+        myBaseExpandableListAdapter = new MyBaseExpandableListAdapter(periodList, this);
         idElv.setAdapter(myBaseExpandableListAdapter);
 
         for (int i = 0; i < myBaseExpandableListAdapter.getGroupCount(); i++) {
             idElv.expandGroup(i);
         }
+        initFABMenu();
 
+        initDropDownMenu();
+    }
+
+    private void initDropDownMenu() {
+
+        for (int i = 0; i < tab_head_titles.length; i++) {
+            TextView dropDownView = new TextView(this);
+            dropDownView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            dropDownView.setText("tab_head_view" + i);
+            dropDownView.setGravity(Gravity.CENTER);
+            dropDownView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+            dropDownViews.add(dropDownView);
+        }
+
+
+
+        //init context view
+        TextView contentView = new TextView(this);
+        contentView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        contentView.setText("内容显示区域");
+        contentView.setGravity(Gravity.CENTER);
+        contentView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+
+        //tabs 所有标题，popupViews  所有菜单，contentView 内容
+        idDropDownMenu.setDropDownMenu(Arrays.asList(tab_head_titles), dropDownViews, contentView);
+    }
+
+    private void initFABMenu() {
+        //1.Create a button to attach the menu: in Activity Context
+        ImageView icon = new ImageView(this); // Create an icon
+        icon.setImageDrawable(ContextCompat.getDrawable(this, R.mipmap.ic_action_new_light));
+
+        FloatingActionButton floatingActionButton = new FloatingActionButton.Builder(this)
+                .setContentView(icon)
+                .build();
+        //2.Create menu items:
+        SubActionButton.Builder itemBuilder = new SubActionButton.Builder(this);
+        // repeat many times:
+        ImageView itemIcon = new ImageView(this);
+        itemIcon.setImageDrawable(ContextCompat.getDrawable(this, R.mipmap.ic_action_camera_light));
+        SubActionButton button1 = itemBuilder.setContentView(itemIcon).build();
+
+        ImageView itemIcon2 = new ImageView(this);
+        itemIcon2.setImageDrawable(ContextCompat.getDrawable(this, R.mipmap.ic_action_picture_light));
+        SubActionButton button2 = itemBuilder.setContentView(itemIcon2).build();
+
+        ImageView itemIcon3 = new ImageView(this);
+        itemIcon3.setImageDrawable(ContextCompat.getDrawable(this, R.mipmap.ic_action_place_light));
+        SubActionButton button3 = itemBuilder.setContentView(itemIcon3).build();
+
+
+        //3. Create the menu with the items:
+        FloatingActionMenu actionMenu = new FloatingActionMenu.Builder(this)
+                .addSubActionView(button1)
+                .addSubActionView(button2)
+                .addSubActionView(button3)
+                        // ...
+                .attachTo(floatingActionButton)
+                .build();
     }
 
     private void readXml() {
@@ -87,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.id_btn)
     public void onClick(View view) {
-        switch (view.getId()){
+        switch (view.getId()) {
             case R.id.id_btn:
                 //readXml();
                 submitJson();
@@ -100,36 +179,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void submitJson() {
-        List<String>  groupKeyStringList=myBaseExpandableListAdapter.getGroupKeyStringList();
-        Map<String,Object> childViewMap=myBaseExpandableListAdapter.getChildViewMap();
+        List<String> groupKeyStringList = myBaseExpandableListAdapter.getGroupKeyStringList();
+        Map<String, Object> childViewMap = myBaseExpandableListAdapter.getChildViewMap();
 
-        Map<String,Object> group4List_Map=new HashMap<>();
+        Map<String, Object> group4List_Map = new HashMap<>();
 
         for (int i = 0; i < groupKeyStringList.size(); i++) {
-            String  groupKeyString= groupKeyStringList.get(i);//0_   1_
+            String groupKeyString = groupKeyStringList.get(i);//0_   1_
 
-            List<Map<String,String>> attrsMapList=new ArrayList<>();
+            List<Map<String, String>> attrsMapList = new ArrayList<>();
             for (String key : childViewMap.keySet()) {
-                Map<String,String> attrsMap=null;
+                Map<String, String> attrsMap = null;
                 try {
-                    attrsMap=dealChildViews((View) childViewMap.get(key));
-                    System.out.println("key= "+ key + " and attrsMap= " + attrsMap);
-                     if (key.contains(groupKeyString)){
-                         attrsMapList.add(attrsMap);
+                    attrsMap = dealChildViews((View) childViewMap.get(key));
+                    System.out.println("key= " + key + " and attrsMap= " + attrsMap);
+                    if (key.contains(groupKeyString)) {
+                        attrsMapList.add(attrsMap);
                     }
 
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-            group4List_Map.put(groupKeyString,attrsMapList);
+            group4List_Map.put(groupKeyString, attrsMapList);
 
         }
 
 
-
-
-       JsonString= JSON.toJSONString(group4List_Map).toString();
+        JsonString = JSON.toJSONString(group4List_Map).toString();
         Log.d(TAG, "JsonString:" + JsonString);
 
 
@@ -153,85 +230,88 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-    public Map<String,String>  dealChildViews(View view) throws  Exception{
-       Map<String,String> attrsMap=new HashMap<>();
+
+    public Map<String, String> dealChildViews(View view) throws Exception {
+        Map<String, String> attrsMap = new HashMap<>();
         if (view instanceof EditText) {
             EditText et = (EditText) view;
-            String et_t= et.getTag().toString();
-            String et_txt=et.getText().toString();
+            String et_t = et.getTag().toString();
+            String et_txt = et.getText().toString();
             Log.d(TAG, "getChildViews: EditText:" + et_t + "====" + et_txt);
             attrsMap.put(et_t, et_txt);
             //mapKeyValue.put("value", et_txt);
-        }else if (view instanceof TextView) {
+        } else if (view instanceof TextView) {
             TextView tv = (TextView) view;
-            String et_t= tv.getTag().toString();
-            String et_txt=tv.getText().toString();
+            String et_t = tv.getTag().toString();
+            String et_txt = tv.getText().toString();
             Log.d(TAG, "getChildViews: TextView:" + et_t + "====" + et_txt);
             attrsMap.put(et_t, et_txt);
             //mapKeyValue.put("value", et_txt);
-        }else if (view instanceof RadioGroup) {
+        } else if (view instanceof RadioGroup) {
             RadioGroup rg = (RadioGroup) view;
-            String view_t= rg.getTag().toString();
-            RadioButton rb=ButterKnife.findById(this, rg.getCheckedRadioButtonId());
-            String view_txt="";
+            String view_t = rg.getTag().toString();
+            RadioButton rb = ButterKnife.findById(this, rg.getCheckedRadioButtonId());
+            String view_txt = "";
             if (rb != null) {
-                view_txt=rb.getText().toString();
+                view_txt = rb.getText().toString();
             }
             Log.d(TAG, "getChildViews: RadioGroup:" + view_t + "====" + view_txt);
             attrsMap.put(view_t, view_txt);
             //mapKeyValue.put("value", et_txt);
-        }else if (view instanceof CheckBox) {
+        } else if (view instanceof CheckBox) {
             CheckBox cb = (CheckBox) view;
-            String view_t= cb.getTag().toString();
-            String view_txt=cb.getText().toString();
+            String view_t = cb.getTag().toString();
+            String view_txt = cb.getText().toString();
             Log.d(TAG, "getChildViews: CheckBox:" + view_t + "====" + view_txt);
             attrsMap.put(view_t, view_txt);
             //mapKeyValue.put("value", et_txt);
-        }else if (view instanceof Spinner) {
+        } else if (view instanceof Spinner) {
             Spinner spinner = (Spinner) view;
-            String view_t= spinner.getTag().toString();
-            String view_txt=spinner.getSelectedItem().toString();
+            String view_t = spinner.getTag().toString();
+            String view_txt = spinner.getSelectedItem().toString();
             Log.d(TAG, "getChildViews: Spinner:" + view_t + "====" + view_txt);
             attrsMap.put(view_t, view_txt);
             //mapKeyValue.put("value", et_txt);
         }
         return attrsMap;
     }
+
     public void getChildViews(ViewGroup viewGroup) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
             View view = viewGroup.getChildAt(i);
             if (view instanceof EditText) {
                 EditText et = (EditText) view;
-                String et_t= et.getTag().toString();
-                String et_txt=et.getText().toString();
-                Log.d(TAG, "getChildViews: EditText"+et_t+"===="+et_txt);
-            }else if (view instanceof TextView) {
+                String et_t = et.getTag().toString();
+                String et_txt = et.getText().toString();
+                Log.d(TAG, "getChildViews: EditText" + et_t + "====" + et_txt);
+            } else if (view instanceof TextView) {
                 TextView tv = (TextView) view;
-                String et_t= tv.getTag().toString();
-                String et_txt=tv.getText().toString();
-                Log.d(TAG, "getChildViews: TextView"+et_t+"===="+et_txt);
-            }else if (view instanceof RadioGroup) {
+                String et_t = tv.getTag().toString();
+                String et_txt = tv.getText().toString();
+                Log.d(TAG, "getChildViews: TextView" + et_t + "====" + et_txt);
+            } else if (view instanceof RadioGroup) {
                 RadioGroup rg = (RadioGroup) view;
-                String et_t= rg.getTag().toString();
-                RadioButton rb=ButterKnife.findById(this, rg.getCheckedRadioButtonId());
-                String et_txt= rb.getText().toString();
-                Log.d(TAG, "getChildViews: RadioGroup"+et_t+"===="+et_txt);
-            }else if (view instanceof CheckBox) {
+                String et_t = rg.getTag().toString();
+                RadioButton rb = ButterKnife.findById(this, rg.getCheckedRadioButtonId());
+                String et_txt = rb.getText().toString();
+                Log.d(TAG, "getChildViews: RadioGroup" + et_t + "====" + et_txt);
+            } else if (view instanceof CheckBox) {
                 CheckBox cb = (CheckBox) view;
-                String et_t= cb.getTag().toString();
-                String et_txt=cb.getText().toString();
-                Log.d(TAG, "getChildViews: CheckBox"+et_t+"===="+et_txt);
-            }else if (view instanceof Spinner) {
+                String et_t = cb.getTag().toString();
+                String et_txt = cb.getText().toString();
+                Log.d(TAG, "getChildViews: CheckBox" + et_t + "====" + et_txt);
+            } else if (view instanceof Spinner) {
                 Spinner spinner = (Spinner) view;
-                String et_t= spinner.getTag().toString();
-                String et_txt=spinner.getSelectedItem().toString();
-                Log.d(TAG, "getChildViews: Spinner"+et_t+"===="+et_txt);
-            }   else if (view instanceof ViewGroup) {
+                String et_t = spinner.getTag().toString();
+                String et_txt = spinner.getSelectedItem().toString();
+                Log.d(TAG, "getChildViews: Spinner" + et_t + "====" + et_txt);
+            } else if (view instanceof ViewGroup) {
                 // 若是布局控件（LinearLayout或RelativeLayout）,继续查询子View
                 this.getChildViews((ViewGroup) view);
             }
         }
     }
+
     public Agronet getAgronetByDom(InputStream input) throws Exception {
         Agronet agronet = new Agronet();
         List<Period> periodList = null;
