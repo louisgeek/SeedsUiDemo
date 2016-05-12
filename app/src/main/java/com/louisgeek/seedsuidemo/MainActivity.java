@@ -4,9 +4,19 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
+import android.widget.TextView;
 
+import com.alibaba.fastjson.JSON;
+
+import org.json.JSONArray;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -36,7 +46,10 @@ public class MainActivity extends AppCompatActivity {
     Agronet agronet = null;
     @Bind(R.id.id_elv)
     ExpandableListView idElv;
+    MyBaseExpandableListAdapter myBaseExpandableListAdapter;
 
+    String JsonString = "";
+    JSONArray jsonArray;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,15 +57,17 @@ public class MainActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
 
-        idBtn.setVisibility(View.GONE);
+       // idBtn.setVisibility(View.GONE);
         readXml();
 
 
-
-
         List<Period> periodList = agronet.getPeriods();
-        MyBaseExpandableListAdapter myBaseExpandableListAdapter=new MyBaseExpandableListAdapter(periodList,this);
+         myBaseExpandableListAdapter = new MyBaseExpandableListAdapter(periodList, this);
         idElv.setAdapter(myBaseExpandableListAdapter);
+
+        for (int i = 0; i < myBaseExpandableListAdapter.getGroupCount(); i++) {
+            idElv.expandGroup(i);
+        }
 
     }
 
@@ -71,11 +86,152 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @OnClick(R.id.id_btn)
-    public void onClick() {
-        readXml();
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.id_btn:
+                //readXml();
+                submitJson();
+                break;
+            default:
+                break;
+        }
+
 
     }
 
+    private void submitJson() {
+        List<String>  groupKeyStringList=myBaseExpandableListAdapter.getGroupKeyStringList();
+        Map<String,Object> childViewMap=myBaseExpandableListAdapter.getChildViewMap();
+
+        Map<String,Object> group4List_Map=new HashMap<>();
+
+        for (int i = 0; i < groupKeyStringList.size(); i++) {
+            String  groupKeyString= groupKeyStringList.get(i);//0_   1_
+
+            List<Map<String,String>> attrsMapList=new ArrayList<>();
+            for (String key : childViewMap.keySet()) {
+                Map<String,String> attrsMap=null;
+                try {
+                    attrsMap=dealChildViews((View) childViewMap.get(key));
+                    System.out.println("key= "+ key + " and attrsMap= " + attrsMap);
+                     if (key.contains(groupKeyString)){
+                         attrsMapList.add(attrsMap);
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            group4List_Map.put(groupKeyString,attrsMapList);
+
+        }
+
+
+
+
+       JsonString= JSON.toJSONString(group4List_Map).toString();
+        Log.d(TAG, "JsonString:" + JsonString);
+
+
+
+      /*  // 总json对象
+        JSONObject jsonObject_agronet = new JSONObject();
+        JSONObject jsonObject_table_per = new JSONObject();
+        JSONObject jsonObject_periods = new JSONObject();
+        JSONArray jsonArray_period = new JSONArray();
+        for (int i = 0; i < groupKeyStringList.size(); i++) {
+            String  groupKeyString= groupKeyStringList.get(i);
+            JSONObject jsonObject_c = new JSONObject();
+            jsonObject_c.put("groupKeyString",groupKeyString);
+            jsonObject_c.put("groupKeyString",groupKeyString)
+            jsonArray_period.put()
+        }
+        jsonObject_table_per.put("tableid","Sys_Menu");
+        jsonObject_periods.put("periods", jsonArray_period);
+        jsonObject_table_per.put("periods",jsonObject_periods);
+        jsonObject_agronet.put("agronet", jsonObject_table_per);*/
+
+
+    }
+    public Map<String,String>  dealChildViews(View view) throws  Exception{
+       Map<String,String> attrsMap=new HashMap<>();
+        if (view instanceof EditText) {
+            EditText et = (EditText) view;
+            String et_t= et.getTag().toString();
+            String et_txt=et.getText().toString();
+            Log.d(TAG, "getChildViews: EditText:" + et_t + "====" + et_txt);
+            attrsMap.put(et_t, et_txt);
+            //mapKeyValue.put("value", et_txt);
+        }else if (view instanceof TextView) {
+            TextView tv = (TextView) view;
+            String et_t= tv.getTag().toString();
+            String et_txt=tv.getText().toString();
+            Log.d(TAG, "getChildViews: TextView:" + et_t + "====" + et_txt);
+            attrsMap.put(et_t, et_txt);
+            //mapKeyValue.put("value", et_txt);
+        }else if (view instanceof RadioGroup) {
+            RadioGroup rg = (RadioGroup) view;
+            String view_t= rg.getTag().toString();
+            RadioButton rb=ButterKnife.findById(this, rg.getCheckedRadioButtonId());
+            String view_txt="";
+            if (rb != null) {
+                view_txt=rb.getText().toString();
+            }
+            Log.d(TAG, "getChildViews: RadioGroup:" + view_t + "====" + view_txt);
+            attrsMap.put(view_t, view_txt);
+            //mapKeyValue.put("value", et_txt);
+        }else if (view instanceof CheckBox) {
+            CheckBox cb = (CheckBox) view;
+            String view_t= cb.getTag().toString();
+            String view_txt=cb.getText().toString();
+            Log.d(TAG, "getChildViews: CheckBox:" + view_t + "====" + view_txt);
+            attrsMap.put(view_t, view_txt);
+            //mapKeyValue.put("value", et_txt);
+        }else if (view instanceof Spinner) {
+            Spinner spinner = (Spinner) view;
+            String view_t= spinner.getTag().toString();
+            String view_txt=spinner.getSelectedItem().toString();
+            Log.d(TAG, "getChildViews: Spinner:" + view_t + "====" + view_txt);
+            attrsMap.put(view_t, view_txt);
+            //mapKeyValue.put("value", et_txt);
+        }
+        return attrsMap;
+    }
+    public void getChildViews(ViewGroup viewGroup) {
+        for (int i = 0; i < viewGroup.getChildCount(); i++) {
+            View view = viewGroup.getChildAt(i);
+            if (view instanceof EditText) {
+                EditText et = (EditText) view;
+                String et_t= et.getTag().toString();
+                String et_txt=et.getText().toString();
+                Log.d(TAG, "getChildViews: EditText"+et_t+"===="+et_txt);
+            }else if (view instanceof TextView) {
+                TextView tv = (TextView) view;
+                String et_t= tv.getTag().toString();
+                String et_txt=tv.getText().toString();
+                Log.d(TAG, "getChildViews: TextView"+et_t+"===="+et_txt);
+            }else if (view instanceof RadioGroup) {
+                RadioGroup rg = (RadioGroup) view;
+                String et_t= rg.getTag().toString();
+                RadioButton rb=ButterKnife.findById(this, rg.getCheckedRadioButtonId());
+                String et_txt= rb.getText().toString();
+                Log.d(TAG, "getChildViews: RadioGroup"+et_t+"===="+et_txt);
+            }else if (view instanceof CheckBox) {
+                CheckBox cb = (CheckBox) view;
+                String et_t= cb.getTag().toString();
+                String et_txt=cb.getText().toString();
+                Log.d(TAG, "getChildViews: CheckBox"+et_t+"===="+et_txt);
+            }else if (view instanceof Spinner) {
+                Spinner spinner = (Spinner) view;
+                String et_t= spinner.getTag().toString();
+                String et_txt=spinner.getSelectedItem().toString();
+                Log.d(TAG, "getChildViews: Spinner"+et_t+"===="+et_txt);
+            }   else if (view instanceof ViewGroup) {
+                // 若是布局控件（LinearLayout或RelativeLayout）,继续查询子View
+                this.getChildViews((ViewGroup) view);
+            }
+        }
+    }
     public Agronet getAgronetByDom(InputStream input) throws Exception {
         Agronet agronet = new Agronet();
         List<Period> periodList = null;
@@ -294,6 +450,8 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                     break;
+                default:
+                    break;
             }
 
             eventType = parser.next();// 注意：此处勿要写成parser.next();不要理解成指针
@@ -301,4 +459,6 @@ public class MainActivity extends AppCompatActivity {
 
         return agronet;
     }
+
+
 }

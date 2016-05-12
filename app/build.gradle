@@ -24,5 +24,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.3.0'
     compile 'com.jakewharton:butterknife:7.0.1'
+    //Fastjson提供Android版本，和标准版本相比，Android版本去掉一些Android虚拟机dalvik不支持的功能，使得jar更小，同时针对dalvik做了很多性能优化，包括减少方法调用等。
+    compile 'com.alibaba:fastjson:1.1.51.android'
 
 }

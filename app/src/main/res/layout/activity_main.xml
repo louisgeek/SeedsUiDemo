@@ -13,10 +13,11 @@
         android:id="@+id/id_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="parser"
+        android:text="GO"
         />
     <ExpandableListView
         android:id="@+id/id_elv"
+        android:layout_below="@id/id_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
